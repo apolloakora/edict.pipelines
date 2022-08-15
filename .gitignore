@@ -1,0 +1,12 @@
+
+## Ignore the kubernetes cluster (kubectl) configuration files
+kubectl-configuration.yml
+
+## Ignore the file storing the kubernetes cluster join command
+node-join-cmd.sh
+
+## Ignore the kubeadm cluster initialization log output file
+kubeadm-init-output.log
+
+## Ignore the file noting the master hostname and IP address
+master-hostname-address.txt

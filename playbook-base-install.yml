@@ -1,0 +1,110 @@
+---
+#
+# ######################### #
+# playbook-base-install.yml #
+# ######################### #
+#
+# This playbook prepares every node to be part of a kubernetes cluster whether
+# they are destined to be masters or workers.
+#
+# This playbook is idempotent can be ran multiple times without a revert or
+# reset playbook.
+#
+# The main pre-requisite is that ssh accesss has been setup and the hosts listed
+# within the hosts.ini file.
+#
+- hosts: all
+  become: true
+  name: Configure the Kubernetes Cluster Nodes
+  tasks:
+  - name: Install packages that allow apt to be used over HTTPS
+    apt:
+      name: "{{ packages }}"
+      state: present
+      update_cache: yes
+    vars:
+      packages:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg-agent
+      - software-properties-common
+
+  - name: Add an apt signing key for Docker
+    apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      state: present
+
+  - name: Add apt repository for stable version
+    apt_repository:
+      repo: deb [arch=arm64] https://download.docker.com/linux/ubuntu focal stable
+      state: present
+
+  - name: Install docker and its dependecies
+    apt: 
+      name: "{{ packages }}"
+      state: present
+      update_cache: yes
+    vars:
+      packages:
+      - docker-ce=5:19.03.15~3-0~ubuntu-focal
+      - docker-ce-cli=5:19.03.15~3-0~ubuntu-focal
+
+  - name: Add ubuntu user to docker group
+    user:
+      name: ubuntu
+      group: docker
+
+  - name: Write docker daemon.json to all nodes
+    copy:
+      dest: /etc/docker/daemon.json
+      content: "{ \"exec-opts\": [\"native.cgroupdriver=systemd\"] }"
+
+  - name: Restart Docker to switch cgroup driver to systemd
+    become: true
+    command: systemctl restart docker
+
+  - name: When machine restarts get Docker to startup
+    become: true
+    command: systemctl enable docker
+
+  - name: Remove swapfile from /etc/fstab
+    mount:
+      name: "{{ item }}"
+      fstype: swap
+      state: absent
+    with_items:
+      - swap
+      - none
+
+  - name: Disable swap
+    command: swapoff -a
+    when: ansible_swaptotal_mb > 0
+
+  - name: Add an apt signing key for Kubernetes
+    apt_key:
+      url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+      state: present
+
+  - name: Adding apt repository for Kubernetes
+    apt_repository:
+      repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
+      state: present
+      filename: kubernetes.list
+
+  - name: Install Kubernetes binaries
+    apt: 
+      name: "{{ packages }}"
+      state: present
+      update_cache: yes
+    vars:
+      packages:
+        - kubelet 
+        - kubeadm 
+        - kubectl
+
+  - name: Restart kubelet
+    service:
+      name: kubelet
+      daemon_reload: yes
+      state: restarted

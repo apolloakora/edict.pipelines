@@ -1,3 +1,5 @@
+
+checkng
 Tired of paying through the nose for a cloud kubernetes cluster. Fancy mining bitcoin with your own server rack. How about creating a **[Raspberry Pi Kubernetes Cluster](https://www.devopswiki.co.uk/wiki/kubernetes/pi/raspberry-pi-kubernetes-cluster)**
 
 # Use Ansible to Install Kubernetes on a Raspberry Pi Cluster or Vagrant VMs

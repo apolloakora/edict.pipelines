@@ -22,10 +22,10 @@
   name: Setup control plane and make kubectl talk to cluster
   tasks:
 
-- name: Removing config.toml to allow kubeadm to work
-  ansible.builtin.file:
-    path: /etc/containerd/config.toml
-    state: absent
+  - name: Removing config.toml to allow kubeadm to work
+    ansible.builtin.file:
+      path: /etc/containerd/config.toml
+      state: absent
     
   - name: Initialize the Kubernetes control plane using kubeadm
     become: true
@@ -37,11 +37,11 @@
     become: false
 
   - name: Create the .kube directory to hold the kubectl configuration
-    become: false
+    become: true
     file:
-      path: /home/apollo/.kube
+      path: /home/ubuntu/.kube
       state: directory
-      owner: apollo
+      owner: ubuntu
       group: docker
       mode: 0755
 
@@ -49,8 +49,8 @@
     become: true
     command: "{{ item }}"
     with_items:
-     - cp -i /etc/kubernetes/admin.conf /home/apollo/.kube/config
-     - chown apollo  :docker /home/apollo/.kube/config
+     - cp -i /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
+     - chown ubuntu /home/ubuntu/.kube/config
 
   - name: Fetch kubectl config for laptop (ansible host) to use
     fetch:
@@ -69,4 +69,4 @@
 
   - name: Install calico pod networking using kubectl on the master
     become: false
-    command: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+    command: kubectl apply -f https://projectcalico.docs.tigera.io/manifests/tigera-operator.yaml

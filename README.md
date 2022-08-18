@@ -1,98 +1,223 @@
-Tired of paying through the nose for a cloud kubernetes cluster. Fancy mining bitcoin with your own server rack. How about creating a **[Raspberry Pi Kubernetes Cluster](https://www.devopswiki.co.uk/wiki/kubernetes/pi/raspberry-pi-kubernetes-cluster)**
 
-# Use Ansible to Install Kubernetes on a Raspberry Pi Cluster or Vagrant VMs
+# Concourse CI/CD in Kubernetes on Ubuntu 22.04
 
-This Ansible configuration manager will create a Kubernetes cluster on cloud VMs, vagrant VMs or even a Raspberry Pi cluster.
-
-
----
-
-
-## step 1 - install ansible and setup nodes
-
-We need to prepare our nodes, install Ansible and configure **`/etc/hosts`** entries so that machines can talk to one another.
-
-1. build your Raspberry Pi rack and install Ubuntu Server 20.04 on each node
-1. or install Vagrant and use it to create 3 or 4 VMs running Ubuntu Server
-1. install Ansible on a Linux laptop (or VM)
-1. ensure every node can contact every other node by name with **`/etc/hosts`** entries
-1. you need **`/etc/hosts`** entries on your Linux laptop/VM too mapping IP addresses
+This blog starts with a number of freshly installed machines running Ubuntu. You could use Cloud VM, Vagrant VMs, Intel NUCs or even (arm64) **[Raspberry Pi](https://www.devopswiki.co.uk/wiki/kubernetes/pi/raspberry-pi-kubernetes-cluster)** nodes.
 
 
 ---
 
 
-## step 2 - setup ssh from ansible host
+## 1. Initial Basic Machine Setup
 
-Ansible needs to be able to SSH into each node to configure it with whatever is needed for that node to play the role of a Kubernetes master or worker. To do this
+When the VM awakens login with username - **`ubuntu`** and your chosen password. Then proceed with
 
-1. create SSH private / public key pairs on your Ansible laptop
-1. put the private keys in the laptop's .ssh folder (eg **`~/.ssh/cluster.pi-r1d4.pem`**)
-1. use this command put the corresponding public keys into the node
-1. **`echo "<public key text>" >> ~/.ssh/authorized_keys`**
-1. create a section in your **`~/.ssh/config`** file like below
+1. **`lsb_release -a`** - check the linux distroy and version
+1. **`sudo apt update`** - update the list of package repositories
+1. **`sudo dpkg --configure -a`** - get the package manager ready
+1. **`sudo apt upgrade --assume-yes`** - upgrade the system packages
+1. **`sudo apt install emacs --assume-yes`** - install emacs editor
+1. **`ip a`** - record the IP address of this pi
 
-### The SSH Config File
+Now SSH in from your "pet" machine to continue the setup. If you have connected to this machine before you may need to delete a line from known_hosts and maybe change the IP address in **`~/.ssh/config`** and **`/etc/hosts`**
 
-Put this section inside the **`~/.ssh/config**` file to help Ansible configure the kubernetes cluster machines.
+
+---
+
+
+## 2. Set Up Passwordless Sudo
+
+After these commands you won't need to type the password every time you run a command with sudo. To achieve this we modify the user and then assume root rather than just using sudo.
+
+```bash
+sudo usermod -a -G sudo $USER
+sudo su root
+cd;
+sudo echo "$SUDO_USER ALL=NOPASSWD: ALL" >> /etc/sudoers
+```
+
+In Ubuntu 22.04 you no longer need to exit and pull up a new terminal.
+
+
+---
+
+
+## 3. (Optional) Change Machine Hostname
+
+Skip this section if your machines already have distinct hostnames. **A network with 8 machines called `ubuntu` is disconcerting!** Set the hostname to uniquely identify the rack and the position in the rack where **1 is high** and **4 is low**.
+
+<blockquote>
+pi-r1d1 is the hostname of the top machine in rack one<br/>
+pi-r2d8 the eighth (bottom) machine in the second rack
+</blockquote>
+
+1. **`hostnamectl`** - report the current hostname and machine ID
+1. **`sudo hostnamectl set-hostname pi-r1d1`** - change the hostname
+1. **`sudo emacs /etc/hosts`** - edit the `/etc/hosts` file
+1. add this **`127.0.0.1 pi-r1d1`** as the second line
+
+### Edit the cloud configuration
+
+Now edit the cloud configuration file and shutdown the machine
+
+1. **`sudo emacs /etc/cloud/cloud.cfg`** - edit the cloud config
+1. `preserve_hostname: true` - change flag from false to true
+1. **`sudo shutdown -r now`** - reboot the cluster node
+
+Now on your laptop (pet) add a mapping in **`/etc/hosts`** linking the pi's IP address and its new hostname. This method doesn't scale - if you run more than 5 or 6 machines you should consider setting up a dedicated DNS server on one of your cluster nodes.
+
+Test connectivity with **`ping -c 4 pi-r1d1`**
+
+
+---
+
+
+## 4. Add /etc/hosts mappings for each machine
+
+**Note that you may need to return to this configuration when you have the ip address/hostnames of the other raspberry pis.**
+
+<blockquote>
+As well as the 127.0.0.1 mapping add the IP address/hostname mappings for all the other Raspberry Pi machines.
+Every machine needs to talk to every other machine.
+</blockquote>
+
+1. **`sudo emacs /etc/hosts`** - edit the /etc/hosts file
+1. Add the Address Hostname mappings for other cluster nodes
+3. Save and Exit
 
 ```
-## ###################################### ##
-## Rack 1 Raspberry Pi Kubernetes Cluster ##
-## -------------------------------------- ##
-## ###################################### ##
+127.0.0.1 localhost
+127.0.0.1 pi-r1d1
+
+# Address Hostname mappings for K8s Cluster Nodes
+192.168.0.59 pi-r1d2
+192.168.0.61 pi-r1d3
+192.168.0.62 pi-r1d4
+```
+
+Check that your new node can talk to all the other nodes.
+
+```
+ping pi-r1d2
+ping pi-r1d3
+ping pi-r1d4
+```
+
+
+---
+
+
+## 5. Setup SSH Public/Private Keypair
+
+**Ansible** the configuration management tool will be used to setup our Kubernetes cluster. Ansible requires a private key and needs our Raspberry Pi machines to have the corresponding authorized public key.
+
+Use **`ssh-keygen`** or **`safe keygen`** to produce your keypair.
+
+1. **`ssh ubuntu@pi-r1d1`** - ssh in with password
+1. **`echo "<public key text>" >> ~/.ssh/authorized_keys`** - add public key
+1. **`cat ~/.ssh/authorized_keys`** - assert public key in authorized_keys
+1. **`exit`** - exit the ssh session
+
+Finally we place the private key equivalent inside the .ssh folder and connect **securely without a password**.
+
+1. **`safe write private.key --folder=~/.ssh`** - write the private key into **`~/.ssh`**
+1. **`ssh ubuntu@pi-r1d1 -i ~/.ssh/services.cluster.pi-r1d1.pem`** - ssh in securely
+
+
+---
+
+
+## 6. Setup Simple Secure SSH Access
+
+For humans and Ansible to **simply ssh into each cluster node** you need the following sections within the ssh config file found at **`~/.ssh/config`** on your pet Linux/Mac laptop that Ansible will run from.
+
+```
+## ################################### ##
+## Kubernetes Cluster Nodes SSH Config ##
+## ----------------------------------- ##
+## ################################### ##
 
 Host master
   HostName pi-r1d1
   User ubuntu
-  IdentityFile ~/.ssh/cluster.pi-r1d1.pem
+  IdentityFile ~/.ssh/services.cluster.pi-r1d1.pem
   StrictHostKeyChecking no
 
 Host worker1
   HostName pi-r1d2
   User ubuntu
-  IdentityFile ~/.ssh/cluster.pi-r1d2.pem
+  IdentityFile ~/.ssh/services.cluster.pi-r1d2.pem
   StrictHostKeyChecking no
 
 Host worker2
   HostName pi-r1d3
   User ubuntu
-  IdentityFile ~/.ssh/cluster.pi-r1d3.pem
+  IdentityFile ~/.ssh/services.cluster.pi-r1d3.pem
   StrictHostKeyChecking no
 
 Host worker3
   HostName pi-r1d4
   User ubuntu
-  IdentityFile ~/.ssh/cluster.pi-r1d4.pem
+  IdentityFile ~/.ssh/services.cluster.pi-r1d4.pem
   StrictHostKeyChecking no
 ```
 
 In each block of the **`~/.ssh/config`** file you are pinpointing
+
 - the name (**`master`**, **`worker1`**) that refers to the host
 - the actual hostname of the node (set with **`hostnamectl`**)
 - the username (**`ubuntu`** is the default for Ubuntu server 20.04)
 - the path to the private key placed in the **`~/.ssh`** folder
 
+Test host and ssh connectivity like this.
+
+```
+ssh master
+ssh worker1
+ssh worker2
+ssh worker3
+```
+
+When debugging SSH connectivity failures remember
+
+- to delete the hostname line in authorized_keys on your **(pet)** laptop
+- to delete the host line in known_hosts on the **(cattle)** node
+- that if using DHCP your router may assign different IP addresses
+- check /etc/hosts has correct IP Address hostname mapping
+- check your pet's ssh config has the correct username, hostname and key file
+
 
 ---
 
 
-## step 3 - validate the ssh configuration
+## 7. Install Ansible on your (Pet) Laptop
 
-If you are setting up a 4 node cluster (on Raspberry Pi or Vagrant VMs) you should be able to **ssh from** your linux laptop (with Ansible installed) **into each node** like this
+Ansible is built on an agentless paradigm so you only need to install it in one place then point at the nodes you want it to configure.
 
-- **`ssh master`**
-- **`ssh worker1`**
-- **`ssh worker2`**
-- **`ssh worker3`**
+### Install Ansible on Mac
 
-These names match the entries in the **`~/.ssh/config`** file. 
+If you are using a MacBook it is simple to install Ansible.
+
+```
+brew install ansible
+ansible --version
+```
+
+### Install Ansible on Linux (Ubuntu)
+
+If you have an Ubuntu VM (Raspberry Pi, or laptop, or built by Vagrant) you can install Ansible with these commands.
+
+```
+sudo apt-add-repository ppa:ansible/ansible
+sudo apt update
+sudo apt install ansible
+ansible --version
+```
 
 
 ---
 
 
-## step 4 - the `hosts.ini` ansislbe inventory
+## step 8 - the `hosts.ini` ansislbe inventory
 
 If you work hard and configure SSH **Ansible rewards your efforts** and automates the entire Kubernetes cluster configuration. In this repository the hosts.ini file looks like this.
 

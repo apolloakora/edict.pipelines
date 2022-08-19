@@ -217,17 +217,18 @@ ansible --version
 ---
 
 
-## step 8 - the `hosts.ini` ansislbe inventory
+## 8. Configure `hosts.ini` - Ansislbe's Inventory
 
-If you work hard and configure SSH **Ansible rewards your efforts** and automates the entire Kubernetes cluster configuration. In this repository the hosts.ini file looks like this.
+If you work hard and configure SSH **Ansible rewards your efforts** and automates the entire Kubernetes cluster build creation and management. In this repository the hosts.ini file looks like this.
 
 ```
-master
+[master]
+node1
 
 [worker]
-worker1
-worker2
-worker3
+node2
+node3
+node4
 ```
 
 It's really simple. The names **`master`**, **`worker1`** and so on reflect the names you put into your laptop's **`~/.ssh/config`** file.
@@ -236,7 +237,7 @@ It's really simple. The names **`master`**, **`worker1`** and so on reflect the 
 ---
 
 
-## step 5 - ansible pre-flight checks
+## 9. Perform Ansible's Pre-flight Checks
 
 Run through this checklist before you let Ansible take-off and create your kubernetes cluster.
 

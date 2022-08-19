@@ -14,6 +14,8 @@
 # within the hosts.ini file.
 #
 - hosts: all
+  vars_files:
+    - ./vars/variables.yml
   become: true
   name: Configure the Kubernetes Cluster Nodes
   tasks:
@@ -29,18 +31,52 @@
       - curl
       - gnupg-agent
       - software-properties-common
+      - gnupg2
+
+  - name: Create containerd config file
+    file:
+      path: "/etc/modules-load.d/containerd.conf"
+      state: "touch"
+
+  - name: Add conf for containerd
+    blockinfile:
+      path: "/etc/modules-load.d/containerd.conf"
+      block: |
+            overlay
+            br_netfilter
+
+  - name: modprobe
+    shell: |
+            sudo modprobe overlay
+            sudo modprobe br_netfilter
+
+  - name: Set system configurations for Kubernetes networking
+    file:
+      path: "/etc/sysctl.d/99-kubernetes-cri.conf"
+      state: "touch"
+
+  - name: Add conf for containerd
+    blockinfile:
+      path: "/etc/sysctl.d/99-kubernetes-cri.conf"
+      block: |
+             net.bridge.bridge-nf-call-iptables = 1
+             net.ipv4.ip_forward = 1
+             net.bridge.bridge-nf-call-ip6tables = 1
+
+  - name: Apply new settings
+    command: sudo sysctl --system
 
   - name: Add an apt signing key for Docker
     apt_key:
       url: https://download.docker.com/linux/ubuntu/gpg
       state: present
 
-  - name: Add apt repository for stable version
+  - name: Add apt repository for docker stable version
     apt_repository:
-      repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
+      repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ k8s_ubuntu_release }} stable
       state: present
 
-  - name: Install docker and its dependecies
+  - name: Install docker and its dependecies and Containerd
     apt: 
       name: "{{ packages }}"
       state: present
@@ -49,6 +85,16 @@
       packages:
       - docker-ce
       - docker-ce-cli
+      - containerd.io
+
+    notify:
+      - docker status
+
+  - name: install containerd
+    shell: |
+            sudo mkdir -p /etc/containerd
+            sudo containerd config default | sudo tee /etc/containerd/config.toml
+            sudo systemctl restart containerd
 
   - name: Add ubuntu user to docker group
     user:

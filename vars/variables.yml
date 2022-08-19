@@ -1,0 +1,4 @@
+node_username: ubuntu
+node_ubuntu_release: jammy
+k8s_ubuntu_release: xenial
+k8s_master_hostname: inca1

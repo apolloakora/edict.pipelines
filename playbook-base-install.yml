@@ -45,10 +45,13 @@
             overlay
             br_netfilter
 
-  - name: modprobe
-    shell: |
-            sudo modprobe overlay
-            sudo modprobe br_netfilter
+  - name: modprobe overlay
+    become: true
+    command: modprobe overlay
+
+  - name: modprobe br_netfilter
+    become: true
+    command: modprobe br_netfilter
 
   - name: Set system configurations for Kubernetes networking
     file:

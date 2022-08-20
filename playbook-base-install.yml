@@ -158,3 +158,20 @@
       name: kubelet
       daemon_reload: yes
       state: restarted
+
+  - name: Get and unarchive the cri dockerd file
+    ansible.builtin.unarchive:
+      src: https://github.com/Mirantis/cri-dockerd/releases/download/v{{ cri_dockerd_version }}/cri-dockerd-{{ cri_dockerd_version }}.amd64.tgz
+      dest: /home/{{ node_username }}
+      remote_src: yes
+
+  - name: Copy cri dockerd executable to usr/local/bin
+    become: true
+    copy:
+      remote_src: yes
+      src: /home/{{ node_username }}/cri-dockerd/cri-dockerd
+      dest: /usr/local/bin
+      backup: no
+      mode: 0755
+      owner: "{{ node_username }}"
+      group: docker

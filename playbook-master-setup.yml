@@ -42,9 +42,9 @@
   - name: Create the .kube directory to hold the kubectl configuration
     become: false
     file:
-      path: /home/ubuntu/.kube
+      path: /home/{{ node_username }}/.kube
       state: directory
-      owner: ubuntu
+      owner: {{ node_username }}
       group: docker
       mode: 0755
 
@@ -52,8 +52,8 @@
     become: true
     command: "{{ item }}"
     with_items:
-     - cp -i /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
-     - chown ubuntu:docker /home/ubuntu/.kube/config
+     - cp -i /etc/kubernetes/admin.conf /home/{{ node_username }}/.kube/config
+     - chown {{ node_username }}:docker /home/{{ node_username }}/.kube/config
 
   - name: Fetch kubectl config for laptop (ansible host) to use
     fetch:

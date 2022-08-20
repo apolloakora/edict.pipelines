@@ -102,7 +102,7 @@
 
   - name: Add ubuntu user to docker group
     user:
-      name: ubuntu
+      name: "{{ node_username }}"
       group: docker
 
   - name: Write docker daemon.json to all nodes

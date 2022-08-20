@@ -44,16 +44,24 @@
     file:
       path: /home/{{ node_username }}/.kube
       state: directory
-      owner: {{ node_username }}
+      owner: "{{ node_username }}"
       group: docker
       mode: 0755
 
   - name: Copy the kubectl configuration for the local user
     become: true
-    command: "{{ item }}"
-    with_items:
-     - cp -i /etc/kubernetes/admin.conf /home/{{ node_username }}/.kube/config
-     - chown {{ node_username }}:docker /home/{{ node_username }}/.kube/config
+    copy:
+      remote_src: yes
+      src: /etc/kubernetes/admin.conf
+      dest: /home/{{ node_username }}/.kube/config
+
+  - name: set owner and mode of kube config file
+    file:
+      path: /home/{{ node_username }}/.kube/config
+      state: file
+      owner: "{{ node_username }}"
+      group: docker
+      mode: 0744
 
   - name: Fetch kubectl config for laptop (ansible host) to use
     fetch:
@@ -70,6 +78,8 @@
       backup: yes
     delegate_to: localhost
 
-#  - name: Install calico pod networking using kubectl on the master
-#    become: false
-#    command: kubectl create -f https://docs.projectcalico.org/v3.4/getting-started/kubernetes/installation/hosted/calico.yaml
+  - name: Install calico pod networking using kubectl on the master
+    command: kubectl --kubeconfig=/home/{{ node_username }}/.kube/config create -f https://raw.githubusercontent.com/projectcalico/calico/v3.24.0/manifests/tigera-operator.yaml
+  
+  - name: create the manifest in order to install calico
+    command: kubectl --kubeconfig=/home/{{ node_username }}/.kube/config create -f https://raw.githubusercontent.com/projectcalico/calico/v3.24.0/manifests/custom-resources.yaml

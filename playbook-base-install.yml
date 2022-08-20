@@ -67,7 +67,8 @@
              net.bridge.bridge-nf-call-ip6tables = 1
 
   - name: Apply new settings
-    command: sudo sysctl --system
+    become: true
+    command: sysctl --system
 
   - name: Add an apt signing key for Docker
     apt_key:

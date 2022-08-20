@@ -175,3 +175,38 @@
       mode: 0755
       owner: "{{ node_username }}"
       group: docker
+
+  - name: Download docker service files
+    ansible.builtin.get_url:
+      url: https://raw.githubusercontent.com/Mirantis/cri-dockerd/master/packaging/systemd/cri-docker.service
+      dest: /etc/systemd/system/
+
+  - name: Download docker socket files
+    ansible.builtin.get_url:
+      url: https://raw.githubusercontent.com/Mirantis/cri-dockerd/master/packaging/systemd/cri-docker.socket
+      dest: /etc/systemd/system/
+
+  - name: replace cri dockerd executable location
+    become: true
+    replace:
+      path: /etc/systemd/system/cri-docker.service
+      regexp: '/usr/bin/cri-dockerd'
+      replace: "/usr/local/bin/cri-dockerd"
+
+  - name: force systemd to reread configuration
+    ansible.builtin.systemd:
+      daemon_reload: yes
+
+  - name: Enable service cri-docker.service and ensure it is not masked
+    ansible.builtin.systemd:
+      name: cri-docker.service
+      enabled: yes
+      masked: no
+
+  - name: Enable service cri-docker.socket and ensure it is not masked
+    ansible.builtin.systemd:
+      name: cri-docker.socket
+      enabled: yes
+      masked: no
+
+      

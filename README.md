@@ -258,6 +258,22 @@ The output of the command with **`--list-hosts`** shows that the **hosts pattern
 ---
 
 
+##############################################################################
+##############################################################################
+
+
+sudo kubeadm join 192.168.0.47:6443 --token pt0d92.h732uuyx3xpy4ml5 --discovery-token-ca-cert-hash sha256:c48d8863da6ab1194dbed2d0a24897d39ac9c4e9929a88de2d2274729e5d369a --cri-socket /run/cri-dockerd.sock
+
+
+##############################################################################
+##############################################################################
+
+
+
+
+
+
+
 ## step 6 - create your kubernetes cluster
 
 Creating the kubernetes cluster is about running three commands. There is **no need to change** the **`hosts.ini`** file because the playbooks know which things to do to all nodes, or the msater, or the worker or a combination.

@@ -193,44 +193,20 @@
       regexp: '/usr/bin/cri-dockerd'
       replace: "/usr/local/bin/cri-dockerd"
 
-  # ---------------------------------------
-  # There is a problem with the below code
-  # ---------------------------------------
-  #
-  # inca3 would not initialize properly and after digging around I noticed
-  # that the crid-docker.service and crid-docker.socket were correctly in
-  # the /etc/systemd/system folder and the /usr/bin to /usr/local/bin replacement
-  # was done correctly.
-  #
-  # But: when I did BOTH these commands
-  #
-  #  $ systemctl status cri-docker.service
-  #  $ systemctl status cri-docker.socket
-  #
-  # it showed a status of inactive so the below commands did not do their job.
-  #
-  # The commands the below are trying to minick are
-  #
-  # $ sudo systemctl daemon-reload
-  # $ sudo systemctl enable cri-docker.service
-  # $ sudo systemctl enable --now cri-docker.socket
-  #
-  # ---------------------------------------
-  # ---------------------------------------
-  #
   - name: force systemd to reread configuration
-    ansible.builtin.systemd:
+    systemd:
       daemon_reload: yes
 
   - name: Enable service cri-docker.service and ensure it is not masked
-    ansible.builtin.systemd:
+    systemd:
       name: cri-docker.service
       enabled: yes
       masked: no
 
   - name: Enable service cri-docker.socket and ensure it is not masked
-    ansible.builtin.systemd:
+    systemd:
       name: cri-docker.socket
+      state: started
       enabled: yes
       masked: no
       

@@ -3,3 +3,5 @@ node_ubuntu_release: jammy
 k8s_ubuntu_release: xenial
 k8s_master_hostname: inca1
 cri_dockerd_version: 0.2.5
+kubeadm_join_token: lu7kv9.a7y8j7qxyvjfhar4
+master_ip_address: 192.168.0.47

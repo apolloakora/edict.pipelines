@@ -21,19 +21,12 @@
 #    kubeadm token create --print-join-command
 #
 
-- hosts: master
-  name: Acquire a join command necessary to induct new workers
-  tasks:
-
-  - name: Ask the master to generate a worker join command
-    command: kubeadm token create --print-join-command
-    become: false
-    register: join_command
-
 - hosts: worker
+  vars_files:
+    - ./vars/variables.yml
   name: Get each worker node to join the kubernetes cluster
   tasks:
 
   - name: Join the worker node to the kubernetes cluster
     become: true
-    command: "{{ hostvars.master.join_command.stdout_lines[0] }}"
+    command: "kubeadm join {{ master_ip_address }}:6443 --token {{ kubeadm_join_token }}  --cri-socket /run/cri-dockerd.sock --discovery-token-unsafe-skip-ca-verification"

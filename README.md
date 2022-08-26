@@ -355,6 +355,11 @@ There it is. The ubiquitous **`Welcome to nginx!`** splash page. Don't forget to
 - **`sudo apt-get update`**
 - **`sudo apt-get install helm`**
 
+*Now we use our previously installed Helm to install Concourse on our cluster*
+
+- **`helm repo add concourse https://concourse-charts.storage.googleapis.com/`**
+- **`helm install my-concourse concourse/concourse --version 17.0.29`**
+
 ---
 
 ## Summary

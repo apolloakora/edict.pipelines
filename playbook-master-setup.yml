@@ -28,6 +28,10 @@
     ansible.builtin.file:
       path: /etc/containerd/config.toml
       state: absent
+
+  - name: Run kubeadm reset before init.
+    become: true
+    command: kubeadm reset --force --cri-socket /run/cri-dockerd.sock
     
   - name: Initialize the Kubernetes control plane using kubeadm
     become: true

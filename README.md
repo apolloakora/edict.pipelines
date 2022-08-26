@@ -237,7 +237,7 @@ It's really simple. The names **`master`**, **`worker1`** and so on reflect the 
 ---
 
 
-## 9. Perform Ansible's Pre-flight Checks
+## 9. ansible pre-flight checks
 
 Run through this checklist before you let Ansible take-off and create your kubernetes cluster.
 
@@ -258,23 +258,7 @@ The output of the command with **`--list-hosts`** shows that the **hosts pattern
 ---
 
 
-##############################################################################
-##############################################################################
-
-
-sudo kubeadm join 192.168.0.47:6443 --token pt0d92.h732uuyx3xpy4ml5 --discovery-token-ca-cert-hash sha256:c48d8863da6ab1194dbed2d0a24897d39ac9c4e9929a88de2d2274729e5d369a --cri-socket /run/cri-dockerd.sock
-
-
-##############################################################################
-##############################################################################
-
-
-
-
-
-
-
-## step 6 - create your kubernetes cluster
+## 10. create kubernetes cluster with ansible
 
 Creating the kubernetes cluster is about running three commands. There is **no need to change** the **`hosts.ini`** file because the playbooks know which things to do to all nodes, or the msater, or the worker or a combination.
 
@@ -307,6 +291,20 @@ This playbook leaves the kubeadm output logs in a file called **`kubeadm-init-ou
 This playbook picks up a join command from the master and applies it to each worker. Use the **`kubectl get nodes -o wide`** command to verify the worker has joined.
 
 You can also ssh into each node and run **`watch docker ps -a`** to see what container workloads are executing on that node.
+
+
+---
+
+
+## 11. setup k9s kubernetes explorer
+
+Learning kubectl and kubernetes manifests is important - but k9s for navigating and managing clusters makes you highly productive.
+
+So to setup k9s you
+- **`cd ~/.kube; ls -lah`**               # change dir to the .kube folder
+- **`mv config $(date '+%s-%F')-config`** # backup the present config file
+- **`scp <k8s_host>:~/.kube/config .`**   # overwrite with new kube config
+- [install k9s on Mac Windows and Linux](https://www.devopswiki.co.uk/k9s/k9s)
 
 
 ---

@@ -1,0 +1,18 @@
+concourse:
+  web:
+    postgres:
+      host: postgres.default.svc.cluster.local
+      port: 5432
+      sslmode: disable
+      connectTimeout: 5m
+      database: concoursedb
+
+postgresql:
+
+  enabled: false
+
+secrets:
+
+  create: true
+  postgresUser: concourseusr
+  postgresPassword: concoursep455w0rd

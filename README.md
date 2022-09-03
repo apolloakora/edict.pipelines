@@ -369,7 +369,11 @@ First we create the postgres database within the cluster that Concourse is going
 *Now we use our previously installed Helm to install Concourse on our cluster*
 
 - **`helm repo add concourse https://concourse-charts.storage.googleapis.com/`**
-- **`helm install my-concourse concourse/concourse --version 17.0.29`**
+- **`helm install my-concourse --values concourse-helm-values.yml concourse/concourse`**
+
+### Delete Helm Chart
+
+- **`helm delete my-concourse`**
 
 ---
 

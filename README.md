@@ -349,9 +349,10 @@ There it is. The ubiquitous **`Welcome to nginx!`** splash page. Don't forget to
 
 First we create the postgres database within the cluster that Concourse is going to depend on. To create the database
 
-- kubectl apply -f k8s-postgres-config-map.yml # setup db name, db username and passwd
-- kubectl apply -f k8s-postgres-persvolume.yml # setup db persistent volume and claim
-- kubectl apply -f k8s-postgres-deployment.yml # setup the postgres cluster deployment
+- kubectl apply -f k8s-postgres-config-map.yml  # setup db name, db username and passwd
+- kubectl apply -f k8s-postgres-persvolume.yml  # setup database persistent volume
+- kubectl apply -f k8s-postgres-volumeclaim.yml # setup database persistent volume claim
+- kubectl apply -f k8s-postgres-deployment.yml  # setup the postgres cluster deployment
 
 
 *To install concourse we have to begin by installing helm*

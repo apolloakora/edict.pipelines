@@ -51,4 +51,4 @@
 
   - name: Join the worker node to the kubernetes cluster
     become: true
-    command: "kubeadm join {{ master_ip_address }}:6443 --token {{ kubeadm_join_token }}  --cri-socket /run/cri-dockerd.sock --discovery-token-unsafe-skip-ca-verification"
+    command: kubeadm join {{ master_ip_address }}:6443 --token {{ kubeadm_join_token }}  --cri-socket /run/cri-dockerd.sock --discovery-token-unsafe-skip-ca-verification

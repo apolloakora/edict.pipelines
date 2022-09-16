@@ -40,7 +40,7 @@
     command: reboot
 
   tasks:
-  - name: roll back cgroup by changing line
+  - name: roll back cgroup by changing line for concourse worker pod
     become: true
     lineinfile:
       path: /etc/default/grub

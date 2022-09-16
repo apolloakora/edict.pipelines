@@ -32,8 +32,14 @@
   vars_files:
     - ./vars/variables.yml
   name: changing cgroup version to get orkers to start and get each worker node to join the kubernetes cluster
-  tasks:
 
+  handlers:
+  - name: reboot machine
+    become: yes
+    become_user: root
+    command: reboot
+
+  tasks:
   - name: roll back cgroup by changing line
     become: true
     lineinfile:
@@ -41,6 +47,7 @@
       regexp: GRUB_CMDLINE_LINUX_DEFAULT=""
       line: GRUB_CMDLINE_LINUX_DEFAULT="systemd.unified_cgroup_hierarchy=0"
       backrefs: yes
+    notify: reboot machine
 
   - name: update grub
     become: true

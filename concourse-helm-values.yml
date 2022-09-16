@@ -22,28 +22,3 @@ persistence:
   ## Ignored for Kind: Deployment. If persistence is needed use kind: StatefulSet
   ##
   enabled: false
-
-  ## Worker Persistence configuration.
-  ##
-  worker:
-    ## concourse data Persistent Volume Storage Class
-    ## If defined, storageClassName: <storageClass>
-    ## If set to "-", storageClassName: "", which disables dynamic provisioning
-    ## If undefined (the default) or set to null, no storageClassName spec is
-    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
-    ##   GKE, AWS & OpenStack)
-    ##
-    storageClass: manual
-
-    ## Persistent Volume Access Mode.
-    ##
-    accessMode: ReadWriteOnce
-
-    ## Persistent Volume Storage Size.
-    ##
-    size: 1Gi
-
-    # You can define additional selector for pvc
-    selector:
-    #   matchLabels:
-    #     app-volume: "concourse"

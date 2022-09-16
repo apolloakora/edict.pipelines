@@ -20,12 +20,30 @@
 #
 #    kubeadm token create --print-join-command
 #
+# In order to reverse this, first drain nodes from master, then run kubeadm reset on each node, and # then do a kubectl delete nodes from the master.
+#
+# kubectl drain {NODE-NAME} --delete-local-data --force --ignore-daemonsets
+# sudo kubeadm reset --cri-socket /run/cri-dockerd.sock
+# kubectl delete node {NODE-NAME}
+#
+
 
 - hosts: worker
   vars_files:
     - ./vars/variables.yml
-  name: Get each worker node to join the kubernetes cluster
+  name: changing cgroup version to get orkers to start and get each worker node to join the kubernetes cluster
   tasks:
+
+  - name: roll back cgroup by changing line
+    become: true
+    lineinfile:
+      path: /etc/default/grub
+      regexp: GRUB_CMDLINE_LINUX_DEFAULT=""
+      line: GRUB_CMDLINE_LINUX_DEFAULT="systemd.unified_cgroup_hierarchy=0"
+
+  - name: update grub
+    become: true
+    command: update-grub
 
   - name: Run kubeadm reset before init.
     become: true

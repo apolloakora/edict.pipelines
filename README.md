@@ -371,6 +371,19 @@ First we create the postgres database within the cluster that Concourse is going
 - **`helm repo add concourse https://concourse-charts.storage.googleapis.com/`**
 - **`helm install my-concourse --values concourse-helm-values.yml concourse/concourse`**
 
+### concourse workers fail to start with failed-to-list-volumes
+
+This error will mean the concourse workers keep failing on startup. The fix rolls back cgroup and it is done by changing a line in **`/etc/default/grub`**
+
+```
+GRUB_CMDLINE_LINUX_DEFAULT=" in grub config to contain systemd.unified_cgroup_hierarchy=0"
+```
+
+After that you run **`sudo update-grub`** and you may need to reboot the machine.
+
+**Note that if you use the Ansible to setup the cluster this step is automated.**
+
+
 ### Delete Helm Chart
 
 - **`helm delete my-concourse`**
